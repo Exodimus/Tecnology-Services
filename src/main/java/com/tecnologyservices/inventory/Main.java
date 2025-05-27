@@ -1,7 +1,10 @@
 package com.tecnologyservices.inventory;
 
+import com.tecnologyservices.inventory.util.DatabaseInitializer;
+
 public class Main {
     public static void main(String[] args) {
-        System.out.print("Hello and welcome!");
+        DatabaseInitializer.initializeDatabase();
+        System.out.println("Inicializando DB");
     }
 }
