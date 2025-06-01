@@ -1,5 +1,4 @@
 package com.tecnologyservices.inventory;
-
 import com.tecnologyservices.inventory.util.DatabaseInitializer;
 
 public class Main {
