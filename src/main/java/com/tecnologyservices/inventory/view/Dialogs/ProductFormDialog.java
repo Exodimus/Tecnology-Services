@@ -5,10 +5,16 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.text.NumberFormat;
 
 public class ProductFormDialog extends JDialog {
-    // Campos del formulario
+    private final JTable productTable;
+    private final int rowToEdit;
+    private final boolean isEditMode;
+
+    // Componentes del formulario
     private JTextField idField;
     private JTextField codeField;
     private JTextField nameField;
@@ -25,39 +31,51 @@ public class ProductFormDialog extends JDialog {
     private JComboBox<String> categoryComboBox;
 
     private static final double IVA_PERCENTAGE = 13.0;
-
-    // Categorías predefinidas (ejemplo)
     private static final String[] PREDEFINED_CATEGORIES = {
-            "Electrónicos",
-            "Ropa",
-            "Alimentos",
-            "Hogar",
-            "Juguetes",
-            "Oficina",
-            "Deportes"
+            "Electrónicos", "Ropa", "Alimentos", "Hogar",
+            "Juguetes", "Oficina", "Deportes"
     };
 
-    public ProductFormDialog(JFrame parent) {
-        super(parent, "Formulario de Producto", true);
-        setSize(500, 600);
+    public ProductFormDialog(JFrame parent, JTable productTable, int rowToEdit, boolean isEditMode) {
+        super(parent, isEditMode ? "Editar Producto" : "Nuevo Producto", true);
+        this.productTable = productTable;
+        this.rowToEdit = rowToEdit;
+        this.isEditMode = isEditMode;
+
+        setSize(600, 650);
         setLocationRelativeTo(parent);
         setResizable(false);
+        setupUI();
 
-        // Panel principal
-        JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new GridLayout(14, 2, 10, 5)); // Reducido a 14 filas
+        if (isEditMode) {
+            fillFromTableRow(rowToEdit);
+        } else {
+            idField.setText(String.valueOf(productTable.getRowCount() + 1));
+        }
+    }
+
+    private void setupUI() {
+        // Panel principal con scroll
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setBorder(new EmptyBorder(15, 20, 15, 20));
         mainPanel.setBackground(new Color(245, 245, 245));
 
+        // Panel de campos del formulario
+        JPanel fieldsPanel = new JPanel(new GridLayout(0, 2, 10, 8));
+        fieldsPanel.setBackground(new Color(245, 245, 245));
+
         // Inicializar componentes
         initializeFields();
-        addFormFields(mainPanel);
-        setupSaveButton();
-        setupEventListeners();
+        addFormFields(fieldsPanel);
 
-        // Añadir componentes
-        mainPanel.add(new JLabel());
-        mainPanel.add(createButtonPanel());
+        // Panel de botón
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.setBackground(new Color(245, 245, 245));
+        buttonPanel.add(createSaveButton());
+
+        // Añadir componentes al panel principal
+        mainPanel.add(new JScrollPane(fieldsPanel), BorderLayout.CENTER);
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
         add(mainPanel);
     }
 
@@ -71,8 +89,8 @@ public class ProductFormDialog extends JDialog {
         colorField = createTextField(true);
         capacityField = createTextField(true);
         sizeField = createTextField(true);
-        purchasePriceField = createTextField(true);
-        gainPercentageField = createTextField(true);
+        purchasePriceField = createFormattedTextField();
+        gainPercentageField = createFormattedTextField();
         salePriceField = createTextField(false);
         salePriceField.setBackground(new Color(240, 240, 240));
         stockField = createTextField(true);
@@ -81,22 +99,8 @@ public class ProductFormDialog extends JDialog {
         categoryComboBox = new JComboBox<>(PREDEFINED_CATEGORIES);
         categoryComboBox.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         categoryComboBox.setBackground(Color.WHITE);
-    }
-
-    private void addFormFields(JPanel panel) {
-        panel.add(createLabel("ID:")); panel.add(idField);
-        panel.add(createLabel("Categoría*:")); panel.add(categoryComboBox);
-        panel.add(createLabel("Código:")); panel.add(codeField);
-        panel.add(createLabel("Nombre*:")); panel.add(nameField);
-        panel.add(createLabel("Marca*:")); panel.add(brandField);
-        panel.add(createLabel("Tipo*:")); panel.add(typeField);
-        panel.add(createLabel("Tamaño:")); panel.add(sizeField);
-        panel.add(createLabel("Color:")); panel.add(colorField);
-        panel.add(createLabel("Capacidad:")); panel.add(capacityField);
-        panel.add(createLabel("Precio Compra*:")); panel.add(purchasePriceField);
-        panel.add(createLabel("% Ganancia*:")); panel.add(gainPercentageField);
-        panel.add(createLabel("Precio Venta (con IVA 13%):")); panel.add(salePriceField);
-        panel.add(createLabel("Stock*:")); panel.add(stockField);
+        categoryComboBox.setMaximumSize(new Dimension(Integer.MAX_VALUE,
+                categoryComboBox.getPreferredSize().height));
     }
 
     private JTextField createTextField(boolean editable) {
@@ -104,9 +108,20 @@ public class ProductFormDialog extends JDialog {
         field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         field.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(200, 200, 200)),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)
+                BorderFactory.createEmptyBorder(5, 8, 5, 8)
         ));
         field.setEditable(editable);
+        return field;
+    }
+
+    private JFormattedTextField createFormattedTextField() {
+        NumberFormat format = NumberFormat.getNumberInstance();
+        JFormattedTextField field = new JFormattedTextField(format);
+        field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200)),
+                BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
         return field;
     }
 
@@ -117,29 +132,72 @@ public class ProductFormDialog extends JDialog {
         return label;
     }
 
-    private void setupSaveButton() {
-        saveButton = new JButton("Guardar Producto");
+    private JButton createSaveButton() {
+        saveButton = new JButton(isEditMode ? "Actualizar Producto" : "Guardar Producto");
         saveButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        saveButton.setBackground(new Color(0, 115, 200));  // Azul corporativo
+        saveButton.setBackground(new Color(13, 110, 253));
         saveButton.setForeground(Color.WHITE);
         saveButton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(0, 80, 180), 1),  // Borde azul más oscuro
-                BorderFactory.createEmptyBorder(8, 25, 8, 25)  // Padding interno aumentado
+                BorderFactory.createLineBorder(new Color(10, 88, 202), 1),
+                BorderFactory.createEmptyBorder(8, 25, 8, 25)
         ));
         saveButton.setFocusPainted(false);
-        saveButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));  // Cursor de mano al pasar
-    }
-
-    private JPanel createButtonPanel() {
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonPanel.setBackground(new Color(245, 245, 245));
-        buttonPanel.add(saveButton);
-        return buttonPanel;
-    }
-
-    private void setupEventListeners() {
+        saveButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         saveButton.addActionListener(e -> saveProduct());
+        return saveButton;
+    }
 
+    private void addFormFields(JPanel panel) {
+        panel.add(createLabel("ID:"));
+        panel.add(createWrappedComponent(idField));
+
+        panel.add(createLabel("Categoría*:"));
+        panel.add(createWrappedComponent(categoryComboBox));
+
+        panel.add(createLabel("Código:"));
+        panel.add(createWrappedComponent(codeField));
+
+        panel.add(createLabel("Nombre*:"));
+        panel.add(createWrappedComponent(nameField));
+
+        panel.add(createLabel("Marca*:"));
+        panel.add(createWrappedComponent(brandField));
+
+        panel.add(createLabel("Tipo*:"));
+        panel.add(createWrappedComponent(typeField));
+
+        panel.add(createLabel("Tamaño:"));
+        panel.add(createWrappedComponent(sizeField));
+
+        panel.add(createLabel("Color:"));
+        panel.add(createWrappedComponent(colorField));
+
+        panel.add(createLabel("Capacidad:"));
+        panel.add(createWrappedComponent(capacityField));
+
+        panel.add(createLabel("Precio Compra*:"));
+        panel.add(createWrappedComponent(purchasePriceField));
+
+        panel.add(createLabel("% Ganancia*:"));
+        panel.add(createWrappedComponent(gainPercentageField));
+
+        panel.add(createLabel("Precio Venta (con IVA 13%):"));
+        panel.add(createWrappedComponent(salePriceField));
+
+        panel.add(createLabel("Stock*:"));
+        panel.add(createWrappedComponent(stockField));
+
+        setupFieldListeners();
+    }
+
+    private JPanel createWrappedComponent(JComponent component) {
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setBackground(new Color(245, 245, 245));
+        wrapper.add(component, BorderLayout.CENTER);
+        return wrapper;
+    }
+
+    private void setupFieldListeners() {
         // Listener para generación automática de código
         DocumentListener codeListener = new DocumentListener() {
             public void insertUpdate(DocumentEvent e) { updateCodeField(); }
@@ -198,8 +256,8 @@ public class ProductFormDialog extends JDialog {
 
     private void calculateSalePrice() {
         try {
-            double purchasePrice = Double.parseDouble(purchasePriceField.getText());
-            double gainPercentage = Double.parseDouble(gainPercentageField.getText());
+            double purchasePrice = Double.parseDouble(purchasePriceField.getText().replace(",", ""));
+            double gainPercentage = Double.parseDouble(gainPercentageField.getText().replace(",", ""));
 
             double priceBeforeTax = purchasePrice * (1 + (gainPercentage / 100));
             double finalPrice = priceBeforeTax * (1 + (IVA_PERCENTAGE / 100));
@@ -210,19 +268,94 @@ public class ProductFormDialog extends JDialog {
         }
     }
 
+    public void fillFromTableRow(int row) {
+        DefaultTableModel model = (DefaultTableModel) productTable.getModel();
+        idField.setText(model.getValueAt(row, 0).toString());
+        codeField.setText(model.getValueAt(row, 1).toString());
+        nameField.setText(model.getValueAt(row, 2).toString());
+        brandField.setText(model.getValueAt(row, 3).toString());
+        typeField.setText(model.getValueAt(row, 4).toString());
+        colorField.setText(model.getValueAt(row, 5).toString());
+        capacityField.setText(model.getValueAt(row, 6).toString());
+
+        try {
+            int categoryIndex = Integer.parseInt(model.getValueAt(row, 7).toString()) - 1;
+            categoryComboBox.setSelectedIndex(categoryIndex);
+        } catch (Exception e) {
+            categoryComboBox.setSelectedIndex(0);
+        }
+
+        purchasePriceField.setText(model.getValueAt(row, 8).toString());
+        gainPercentageField.setText(model.getValueAt(row, 9).toString());
+        salePriceField.setText(model.getValueAt(row, 10).toString());
+        stockField.setText(model.getValueAt(row, 11).toString());
+    }
+
     private void saveProduct() {
-        // Validar campos obligatorios
-        if (nameField.getText().isEmpty() || brandField.getText().isEmpty() ||
-                typeField.getText().isEmpty() || purchasePriceField.getText().isEmpty() ||
-                stockField.getText().isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Por favor complete todos los campos obligatorios (*)",
-                    "Error", JOptionPane.ERROR_MESSAGE);
+        if (!validateFields()) {
             return;
         }
 
-        // Aquí iría la lógica para guardar el producto
-        System.out.println("Producto guardado - Código: " + codeField.getText());
+        DefaultTableModel model = (DefaultTableModel) productTable.getModel();
+        Object[] rowData = getProductData();
+
+        if (isEditMode) {
+            // Actualizar fila existente
+            for (int i = 0; i < rowData.length; i++) {
+                model.setValueAt(rowData[i], rowToEdit, i);
+            }
+            JOptionPane.showMessageDialog(this, "Producto actualizado correctamente",
+                    "Éxito", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            // Añadir nuevo producto
+            model.addRow(rowData);
+            JOptionPane.showMessageDialog(this, "Producto creado correctamente",
+                    "Éxito", JOptionPane.INFORMATION_MESSAGE);
+        }
+
         dispose();
+    }
+
+    private Object[] getProductData() {
+        return new Object[]{
+                idField.getText(),
+                codeField.getText(),
+                nameField.getText(),
+                brandField.getText(),
+                typeField.getText(),
+                colorField.getText(),
+                capacityField.getText(),
+                categoryComboBox.getSelectedIndex() + 1,
+                Double.parseDouble(purchasePriceField.getText().replace(",", "")),
+                Double.parseDouble(gainPercentageField.getText().replace(",", "")),
+                salePriceField.getText().replace(",", ""),
+                Integer.parseInt(stockField.getText()),
+                "" // Placeholder para acciones
+        };
+    }
+
+    private boolean validateFields() {
+        if (nameField.getText().trim().isEmpty() ||
+                brandField.getText().trim().isEmpty() ||
+                typeField.getText().trim().isEmpty()) {
+
+            JOptionPane.showMessageDialog(this,
+                    "Por favor complete los campos obligatorios: Nombre, Marca y Tipo",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        try {
+            Double.parseDouble(purchasePriceField.getText().replace(",", ""));
+            Double.parseDouble(gainPercentageField.getText().replace(",", ""));
+            Integer.parseInt(stockField.getText());
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Por favor ingrese valores numéricos válidos en Precio, Ganancia y Stock",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        return true;
     }
 }

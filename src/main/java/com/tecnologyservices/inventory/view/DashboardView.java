@@ -5,6 +5,7 @@ import com.tecnologyservices.inventory.controller.ProductController;
 import com.tecnologyservices.inventory.view.Dialogs.ProductFormDialog;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
 
 public class DashboardView {
     private JPanel mainPanel;
@@ -22,10 +23,16 @@ public class DashboardView {
         productTable.setDefaultEditor(Object.class, null);
 
         //addProductButton listener
-        addProductButton.addActionListener(e -> {
-            ProductFormDialog dialog = new ProductFormDialog((JFrame) SwingUtilities.getWindowAncestor(mainPanel));
+        addProductButton.addActionListener((ActionEvent e) -> {
+            ProductFormDialog dialog = new ProductFormDialog(
+                    (JFrame) SwingUtilities.getWindowAncestor(mainPanel),
+                    productTable,
+                    -1,
+                    false
+            );
             dialog.setVisible(true);
         });
+
 
     }
 
