@@ -56,7 +56,8 @@ public class DashboardView {
                 parentFrame,
                 productTable,
                 -1,   // Indica nuevo producto
-                false // Modo creación
+                false, // Modo creación
+                new ProductController(this)
         );
         dialog.setVisible(true);
     }

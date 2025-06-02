@@ -1,5 +1,6 @@
 package com.tecnologyservices.inventory.controller;
 
+import com.tecnologyservices.inventory.model.Product;
 import com.tecnologyservices.inventory.service.ProductService;
 import com.tecnologyservices.inventory.util.ButtonEditor;
 import com.tecnologyservices.inventory.util.ButtonRenderer;
@@ -7,6 +8,8 @@ import com.tecnologyservices.inventory.view.DashboardView;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ProductController {
 
@@ -20,7 +23,7 @@ public class ProductController {
         setupActionButtons();
     }
 
-    private void loadProducts() {
+    public void loadProducts() {
         DefaultTableModel model = new DefaultTableModel(
                 new Object[]{
                         "ID", "Código", "Nombre", "Marca", "Tipo", "Color", "Capacidad",
@@ -33,20 +36,21 @@ public class ProductController {
             }
         };
 
-        for (ProductService.ProductRow row : productService.listProductsDummy()) {
+        List<Product> productList = productService.getAll();
+        for (Product product : productList) {
             model.addRow(new Object[]{
-                    row.id,
-                    row.code,
-                    row.name,
-                    row.brand,
-                    row.type,
-                    row.color,
-                    row.capacity,
-                    row.category_id,
-                    row.purchase_price,
-                    row.gain_percentage,
-                    row.sale_price,
-                    row.stock,
+                    product.getId(),
+                    product.getCode(),
+                    product.getName(),
+                    product.getBrand(),
+                    product.getType(),
+                    product.getCode(),
+                    product.getCapacity(),
+                    product.getCategoryId(),
+                    product.getPurchasePrice(),
+                    product.getGainPercentage(),
+                    "12",
+                    product.getStock(),
                     "" // Placeholder para botones
             });
         }

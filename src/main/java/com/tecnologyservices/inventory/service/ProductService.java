@@ -1,10 +1,21 @@
 package com.tecnologyservices.inventory.service;
 
+import com.tecnologyservices.inventory.dao.ProductDao;
+import com.tecnologyservices.inventory.model.Product;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class ProductService {
 
+    private ProductDao productDao = new ProductDao();
+
+    public List<Product> getAll(){
+        return productDao.getAllProducts();
+    }
+    public boolean registrarProducto(Product product) {
+        return productDao.saveProduct(product);
+    }
     public static class ProductRow {
         public int id;
         public String code;

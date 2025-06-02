@@ -1,6 +1,11 @@
 package com.tecnologyservices.inventory.view.Dialogs;
 
+import com.tecnologyservices.inventory.controller.ProductController;
+import com.tecnologyservices.inventory.model.Product;
+import com.tecnologyservices.inventory.service.ProductService;
 import com.tecnologyservices.inventory.util.CodeGenerator;
+import com.tecnologyservices.inventory.view.DashboardView;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
@@ -8,8 +13,11 @@ import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.text.NumberFormat;
+import java.util.List;
 
 public class ProductFormDialog extends JDialog {
+    private ProductService productService;
+    private ProductController productController;
     private final JTable productTable;
     private final int rowToEdit;
     private final boolean isEditMode;
@@ -42,6 +50,24 @@ public class ProductFormDialog extends JDialog {
         this.rowToEdit = rowToEdit;
         this.isEditMode = isEditMode;
 
+        setSize(600, 650);
+        setLocationRelativeTo(parent);
+        setResizable(false);
+        setupUI();
+
+        if (isEditMode) {
+            fillFromTableRow(rowToEdit);
+        } else {
+            idField.setText(String.valueOf(productTable.getRowCount() + 1));
+        }
+    }
+
+    public ProductFormDialog(JFrame parent, JTable productTable, int rowToEdit, boolean isEditMode, ProductController productController) {
+        super(parent, isEditMode ? "Editar Producto" : "Nuevo Producto", true);
+        this.productTable = productTable;
+        this.rowToEdit = rowToEdit;
+        this.isEditMode = isEditMode;
+        this.productController = productController;
         setSize(600, 650);
         setLocationRelativeTo(parent);
         setResizable(false);
@@ -297,18 +323,20 @@ public class ProductFormDialog extends JDialog {
         }
 
         DefaultTableModel model = (DefaultTableModel) productTable.getModel();
-        Object[] rowData = getProductData();
 
         if (isEditMode) {
             // Actualizar fila existente
-            for (int i = 0; i < rowData.length; i++) {
+            /*for (int i = 0; i < rowData.length; i++) {
                 model.setValueAt(rowData[i], rowToEdit, i);
-            }
+            }*/
             JOptionPane.showMessageDialog(this, "Producto actualizado correctamente",
                     "Éxito", JOptionPane.INFORMATION_MESSAGE);
         } else {
             // Añadir nuevo producto
-            model.addRow(rowData);
+            saveProductDB();
+            // 🔄 Actualizar la tabla
+            List<Product> productosActualizados = productService.getAll();
+            productController.loadProducts();
             JOptionPane.showMessageDialog(this, "Producto creado correctamente",
                     "Éxito", JOptionPane.INFORMATION_MESSAGE);
         }
@@ -334,6 +362,23 @@ public class ProductFormDialog extends JDialog {
         };
     }
 
+    private Boolean saveProductDB() {
+        this.productService = new ProductService();
+        Product nuevo = new Product();
+        nuevo.setCode(idField.getText());
+        nuevo.setName(codeField.getText());
+        nuevo.setBrand(nameField.getText());
+        nuevo.setType(typeField.getText());
+        nuevo.setColor(colorField.getText());
+        nuevo.setCapacity(capacityField.getText());
+        nuevo.setCategoryId(categoryComboBox.getSelectedIndex() + 1);
+        nuevo.setPurchasePrice(Double.parseDouble(purchasePriceField.getText().replace(",", "")));
+        nuevo.setTaxPercentage(Double.parseDouble(salePriceField.getText().replace(",", "")));
+        nuevo.setGainPercentage(Double.parseDouble(gainPercentageField.getText().replace(",", "")));
+        nuevo.setStock(Integer.parseInt(stockField.getText()));
+
+        return productService.registrarProducto(nuevo);
+    }
     private boolean validateFields() {
         if (nameField.getText().trim().isEmpty() ||
                 brandField.getText().trim().isEmpty() ||
