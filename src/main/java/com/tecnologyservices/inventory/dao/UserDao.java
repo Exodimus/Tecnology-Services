@@ -3,7 +3,7 @@ import com.tecnologyservices.inventory.model.DatabaseManager;
 
 import java.sql.*;
 public class UserDao {
-    public boolean verificarCredenciales(String username, String password) {
+    public boolean verifierCredentials(String username, String password) {
         String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

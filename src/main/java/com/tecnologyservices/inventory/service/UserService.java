@@ -3,7 +3,7 @@ import com.tecnologyservices.inventory.dao.UserDao;
 public class UserService {
     private UserDao userDAO = new UserDao();
 
-    public boolean autenticar(String username, String password) {
-        return userDAO.verificarCredenciales(username, password);
+    public boolean authenticate(String username, String password) {
+        return userDAO.verifierCredentials(username, password);
     }
 }

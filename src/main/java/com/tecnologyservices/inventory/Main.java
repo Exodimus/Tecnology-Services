@@ -12,9 +12,9 @@ public class Main {
         System.out.println("Inicializando DB...");
         DatabaseInitializer.initializeDatabase();
         SwingUtilities.invokeLater(() -> {
-            LoginView view = new LoginView();
-            new AuthController(view);
-            view.setVisible(true);
+            LoginView loginView = new LoginView();
+            new AuthController(loginView);
+            loginView.showLoginWindow();
         });
     }
 }
