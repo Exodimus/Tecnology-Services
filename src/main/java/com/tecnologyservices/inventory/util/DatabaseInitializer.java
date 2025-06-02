@@ -38,8 +38,8 @@ public class DatabaseInitializer {
                             "capacity TEXT NOT NULL, " +
                             "category_id INTEGER, " +
                             "purchase_price REAL NOT NULL, " +
-                            "tax_percentage REAL NOT NULL, " +
                             "gain_percentage REAL NOT NULL, " +
+                            "sale_price REAL NOT NULL, " +
                             "stock INTEGER NOT NULL, " +
                             "FOREIGN KEY (category_id) REFERENCES categories(id)" +
                             ");"
