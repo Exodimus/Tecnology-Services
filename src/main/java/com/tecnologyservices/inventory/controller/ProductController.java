@@ -15,15 +15,27 @@ public class ProductController {
 
     private final DashboardView view;
     private final ProductService productService;
-
+    private List<Product> productList;
     public ProductController(DashboardView view) {
+        this.productList = new ArrayList<>();
         this.view = view;
         this.productService = new ProductService();
-        loadProducts();
-        setupActionButtons();
+        productList = productService.getAll();
+        loadProducts(productList);
+
+        searchProduct();
     }
 
-    public void loadProducts() {
+    public void searchProduct(){
+        JButton btnSearchProd = view.getBtnSearch();
+        btnSearchProd.addActionListener(e -> {
+            String criterio = view.getSearchProductTextField().getText();
+            productList = productService.searchProducts(criterio);
+            loadProducts(productList);
+        });
+    }
+
+    public void loadProducts(List<Product> productList2) {
         DefaultTableModel model = new DefaultTableModel(
                 new Object[]{
                         "ID", "Código", "Nombre", "Marca", "Tipo", "Color", "Capacidad",
@@ -35,9 +47,7 @@ public class ProductController {
                 return column == 12; // Solo la columna "Acciones" es editable
             }
         };
-
-        List<Product> productList = productService.getAll();
-        for (Product product : productList) {
+        for (Product product : productList2) {
             model.addRow(new Object[]{
                     product.getId(),
                     product.getCode(),
@@ -63,9 +73,10 @@ public class ProductController {
         column.setMinWidth(180);
         column.setPreferredWidth(180);
         column.setMaxWidth(180);
+        setupActionButtons();
     }
 
-    private void setupActionButtons() {
+    public void setupActionButtons() {
         JTable table = view.getProductTable();
         JFrame parent = (JFrame) SwingUtilities.getWindowAncestor(view.getMainPanel());
 

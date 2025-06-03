@@ -1,5 +1,7 @@
 package com.tecnologyservices.inventory.util;
 
+import com.tecnologyservices.inventory.controller.ProductController;
+import com.tecnologyservices.inventory.view.DashboardView;
 import com.tecnologyservices.inventory.view.Dialogs.ProductFormDialog;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -45,7 +47,7 @@ public class ButtonEditor extends AbstractCellEditor implements TableCellEditor 
 
     private void handleEdit(ActionEvent e) {
         fireEditingStopped();
-        ProductFormDialog dialog = new ProductFormDialog(parent, table, currentRow, true);
+        ProductFormDialog dialog = new ProductFormDialog(parent, table, currentRow, true,new ProductController(new DashboardView(this.parent)));
         dialog.setVisible(true);
     }
 

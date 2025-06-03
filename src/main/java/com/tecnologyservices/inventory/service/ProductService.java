@@ -10,11 +10,17 @@ public class ProductService {
 
     private ProductDao productDao = new ProductDao();
 
+    public List<Product> searchProducts(String criterio) {
+        return productDao.searchProducts(criterio);
+    }
     public List<Product> getAll(){
         return productDao.getAllProducts();
     }
     public boolean registrarProducto(Product product) {
         return productDao.saveProduct(product);
+    }
+    public boolean updateProduct(Product product) {
+        return productDao.updataProduct(product);
     }
     public static class ProductRow {
         public int id;

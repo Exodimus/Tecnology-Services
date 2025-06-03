@@ -318,6 +318,7 @@ public class ProductFormDialog extends JDialog {
     }
 
     private void saveProduct() {
+        this.productService = new ProductService();
         if (!validateFields()) {
             return;
         }
@@ -329,14 +330,15 @@ public class ProductFormDialog extends JDialog {
             /*for (int i = 0; i < rowData.length; i++) {
                 model.setValueAt(rowData[i], rowToEdit, i);
             }*/
+            updateProductDB();
+            productController.loadProducts(productService.getAll());
             JOptionPane.showMessageDialog(this, "Producto actualizado correctamente",
                     "Éxito", JOptionPane.INFORMATION_MESSAGE);
         } else {
             // Añadir nuevo producto
             saveProductDB();
             // 🔄 Actualizar la tabla
-            List<Product> productosActualizados = productService.getAll();
-            productController.loadProducts();
+            productController.loadProducts(productService.getAll());
             JOptionPane.showMessageDialog(this, "Producto creado correctamente",
                     "Éxito", JOptionPane.INFORMATION_MESSAGE);
         }
@@ -362,22 +364,45 @@ public class ProductFormDialog extends JDialog {
         };
     }
 
-    private Boolean saveProductDB() {
-        this.productService = new ProductService();
-        Product nuevo = new Product();
-        nuevo.setCode(idField.getText());
-        nuevo.setName(codeField.getText());
-        nuevo.setBrand(nameField.getText());
-        nuevo.setType(typeField.getText());
-        nuevo.setColor(colorField.getText());
-        nuevo.setCapacity(capacityField.getText());
-        nuevo.setCategoryId(categoryComboBox.getSelectedIndex() + 1);
-        nuevo.setPurchasePrice(Double.parseDouble(purchasePriceField.getText().replace(",", "")));
-        nuevo.setTaxPercentage(Double.parseDouble(salePriceField.getText().replace(",", "")));
-        nuevo.setGainPercentage(Double.parseDouble(gainPercentageField.getText().replace(",", "")));
-        nuevo.setStock(Integer.parseInt(stockField.getText()));
+    private Boolean updateProductDB(){
+        Product product = new Product();
+        product.setId(Integer.parseInt(idField.getText()));
+        product.setCode(codeField.getText());
+        product.setName(nameField.getText());
+        product.setBrand(brandField.getText());
+        product.setType(typeField.getText());
+        product.setColor(colorField.getText());
+        product.setCapacity(capacityField.getText());
+        product.setCategoryId(categoryComboBox.getSelectedIndex() + 1);
+        product.setPurchasePrice(Double.parseDouble(purchasePriceField.getText()));
+        product.setTaxPercentage(Double.parseDouble(salePriceField.getText()));
+        product.setGainPercentage(Double.parseDouble(gainPercentageField.getText()));
+        product.setStock(Integer.parseInt(stockField.getText()));
 
-        return productService.registrarProducto(nuevo);
+        boolean updated = productService.updateProduct(product);
+
+        if (updated) {
+            JOptionPane.showMessageDialog(this, "Producto actualizado.");
+        } else {
+            JOptionPane.showMessageDialog(this, "Error al actualizar.");
+        }
+        return updated;
+    }
+    private Boolean saveProductDB() {
+        Product newProd = new Product();
+        newProd.setCode(codeField.getText());
+        newProd.setName(nameField.getText());
+        newProd.setBrand(brandField.getText());
+        newProd.setType(typeField.getText());
+        newProd.setColor(colorField.getText());
+        newProd.setCapacity(capacityField.getText());
+        newProd.setCategoryId(categoryComboBox.getSelectedIndex() + 1);
+        newProd.setPurchasePrice(Double.parseDouble(purchasePriceField.getText().replace(",", "")));
+        newProd.setTaxPercentage(Double.parseDouble(salePriceField.getText().replace(",", "")));
+        newProd.setGainPercentage(Double.parseDouble(gainPercentageField.getText().replace(",", "")));
+        newProd.setStock(Integer.parseInt(stockField.getText()));
+
+        return productService.registrarProducto(newProd);
     }
     private boolean validateFields() {
         if (nameField.getText().trim().isEmpty() ||

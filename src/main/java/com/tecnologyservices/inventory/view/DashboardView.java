@@ -1,9 +1,11 @@
 package com.tecnologyservices.inventory.view;
 
 import com.tecnologyservices.inventory.controller.ProductController;
+import com.tecnologyservices.inventory.model.Product;
 import com.tecnologyservices.inventory.view.Dialogs.ProductFormDialog;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
+import java.util.List;
 
 /**
  * Vista principal del dashboard de inventario
@@ -18,7 +20,10 @@ public class DashboardView {
     private JPanel headerPanel;
     private JLabel companyNameLabel;
     private JLabel moduleLabel;
+    private JButton btnSearch;
     private JToolBar toolBar;
+
+    private ProductController productController;
 
     /**
      * Constructor del dashboard
@@ -27,6 +32,7 @@ public class DashboardView {
     public DashboardView(JFrame parentFrame) {
         configureUI();
         setupControllers(parentFrame);
+        productController = new ProductController(this);
     }
 
     // Configura los elementos de la interfaz de usuario
@@ -47,7 +53,7 @@ public class DashboardView {
             showProductFormDialog(parentFrame);
         });
 
-        new ProductController(this); // Inicializa el controlador
+        //new ProductController(this); // Inicializa el controlador
     }
 
     // Muestra el diálogo de formulario de producto
@@ -57,7 +63,7 @@ public class DashboardView {
                 productTable,
                 -1,   // Indica nuevo producto
                 false, // Modo creación
-                new ProductController(this)
+                productController
         );
         dialog.setVisible(true);
     }
@@ -77,6 +83,14 @@ public class DashboardView {
 
     public JButton getAddProductButton() {
         return addProductButton;
+    }
+
+    public JButton getBtnSearch() {
+        return btnSearch;
+    }
+
+    public void setBtnSearch(JButton btnSearch) {
+        this.btnSearch = btnSearch;
     }
 
     // Método para inicializar componentes personalizados
